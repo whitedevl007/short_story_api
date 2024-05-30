@@ -6,20 +6,20 @@ Install Python: Ensure you have Python installed. You can download it from pytho
 
 # Create a Project Directory:
 
-mkdir short_story_api
-cd short_story_api
+`mkdir short_story_api`
+`cd short_story_api`
 
 Set Up a Virtual Environment:
-python -m venv venv
-source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+`python -m venv venv`
+`source venv/bin/activate`  # On Windows, use `venv\Scripts\activate`
 
 
 # Step 2: Install Required Packages
 Install FastAPI and Uvicorn:
-pip install fastapi uvicorn
+`pip install fastapi uvicorn`
 
 Install Supabase and Dotenv:
-pip install supabase-python python-dotenv
+`pip install supabase-python python-dotenv`
 
 
 # Step 3: Set Up Supabase
@@ -38,11 +38,11 @@ Go to your project's settings to find the API URL and API Key. Note these down.
 
 
 # Step 4: Set Up Environment Variables
-Create a .env File in your project directory and add your Supabase and OpenAI API keys:
+Create a `.env` File in your project directory and add your Supabase and OpenAI API keys:
 
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
-OPENAI_API_KEY=your_openai_api_key
+`SUPABASE_URL=your_supabase_url`
+`SUPABASE_KEY=your_supabase_key`
+`OPENAI_API_KEY=your_openai_api_key`
 
 
 # Step 5: Obtain OpenAI API Key
@@ -62,15 +62,15 @@ Create main.py in your project directory and add the code
 
 # Step 7: Run Your Application
 Start the FastAPI Server:
-uvicorn main:app --reload
+`uvicorn main:app --reload`
 
-Open Your Browser: Go to http://127.0.0.1:8000/docs to access the automatically generated documentation for your API.
+Open Your Browser: Go to `http://127.0.0.1:8000/docs` to access the automatically generated documentation for your API.
 
 
 # Step 8: Test Your Endpoints
 Create a Character:
 
-Send a POST request to http://127.0.0.1:8000/api/create_character with a JSON body like:
+Send a POST request to `http://127.0.0.1:8000/api/create_character` with a JSON body like:
 
 {
   "name": "Bilbo Baggins",
@@ -80,7 +80,7 @@ Send a POST request to http://127.0.0.1:8000/api/create_character with a JSON bo
 
 Generate a Story:
 
-Send a POST request to http://127.0.0.1:8000/api/generate_story with a JSON body like:
+Send a POST request to `http://127.0.0.1:8000/api/generate_story` with a JSON body like:
 
 {
   "character_name": "Bilbo Baggins"
