@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 import supabase
 import openai
+import backoff
+from openai.error import RateLimitError
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,6 +26,18 @@ router = APIRouter(prefix="/api/stories")
 class GenerateStoryRequest(BaseModel):
     character_name: Optional[str] = None
     character_id: Optional[int] = None
+
+@backoff.on_exception(backoff.expo, RateLimitError, max_time=120, base=2)
+def generate_story_with_backoff(prompt: str):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=20,
+    )
+    return response
 
 @router.post("/generate_story", status_code=status.HTTP_201_CREATED)
 def generate_story(request: GenerateStoryRequest):
@@ -52,23 +66,23 @@ def generate_story(request: GenerateStoryRequest):
         "Little did he know, destiny had grand plans for him and his magical possession."
     )
 
-    # Generate the story using OpenAI's API
+    # Generate the story using OpenAI's API with backoff for rate limit errors
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=100,
-        )
+        response = generate_story_with_backoff(prompt)
         story = response.choices[0].message['content'].strip()
         return {"character": character_name, "story": story}
 
-    except openai.error.RateLimitError as e:
-        # Handle RateLimitError appropriately (consider exponential backoff)
+    except RateLimitError as e:
+        # Handle RateLimitError appropriately (already handled by backoff, but logging can be added if necessary)
+        print(f"Rate limit error: {e}")
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="OpenAI rate limit reached. Please try again later.")
 
     except openai.error.OpenAIError as e:
         # Handle other OpenAI errors
+        print(f"OpenAI error: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error generating story: {e}")
+
+    except Exception as e:
+        # Handle other exceptions
+        print(f"Unexpected error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An unexpected error occurred: {e}")
