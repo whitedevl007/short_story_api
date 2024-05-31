@@ -63,6 +63,7 @@ Add the key to your .env file as shown above.
 Since ChatCompletion is no longer supported, we need to migrate your OpenAI library to use the newer API. Run the following command in your terminal:
 
 `openai migrate`
+
 This will update your existing code to use the functions and syntax compatible with the latest OpenAI library version.
 
 

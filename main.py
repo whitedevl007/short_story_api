@@ -1,12 +1,11 @@
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
-from typing import Optional
-from openai import OpenAI
-
-
-import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+import os
+import openai
+from typing import Optional
+from time import time , sleep
 
 app = FastAPI()
 
@@ -21,12 +20,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Configure OpenAI
-# Your OpenAI API key from environment variable
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-# Create OpenAI client object with your API key
-client = OpenAI(api_key=OPENAI_API_KEY)
-
+openai.api_key = OPENAI_API_KEY
 
 class Character(BaseModel):
     name: str
@@ -35,9 +29,14 @@ class Character(BaseModel):
 @app.post("/api/create_character", status_code=status.HTTP_201_CREATED)
 def create_character(character: Character):
     response = supabase.table('characters').insert({"name": character.name, "details": character.details}).execute()
-    if response.error:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=response.error.message)
-    return {"id": response.data[0].id, "name": character.name, "details": character.details}
+
+    # Logging the response for debugging
+    print("Supabase response:", response)
+
+    if response.data:
+        return {"id": response.data[0]['id'], "name": character.name, "details": character.details}
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=response.error_message if response.error else "Unknown error")
 
 class GenerateStoryRequest(BaseModel):
     character_name: Optional[str] = None
@@ -51,6 +50,9 @@ def generate_story(request: GenerateStoryRequest):
         response = supabase.table('characters').select('*').eq('name', request.character_name).execute()
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Character name or id must be provided.")
+
+    # Logging the response for debugging
+    print("Supabase response:", response)
 
     if not response.data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Character not found.")
@@ -67,19 +69,30 @@ def generate_story(request: GenerateStoryRequest):
         "Little did he know, destiny had grand plans for him and his magical possession."
     )
 
-    # Update to use client.completions.create
-    response = client.completions.create(
-        engine="text-davinci-003",  # Replace with your preferred engine
-        prompt=prompt,
-        max_tokens=100,
-        n=1,  # Number of completions (set to 1 for single story)
-        stop=None,  # Optional stop sequence to indicate end of story
-        temperature=0.7  # Adjust temperature for creativity vs. coherence
-    )
+    # Generate the story using OpenAI's API
+    max_retries = 3  # Set a maximum number of retries
+    retry_count = 0
+    while True:
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=100,
+            )
+            story = response.choices[0].message['content'].strip()
+            return {"character": character_name, "story": story}
 
+        except openai.error.RateLimitError as e:
+            retry_time = e.retry_after if hasattr(e, 'retry_after') else 30
+            print(f"Rate limit exceeded. Retrying after {retry_time} seconds...")
+            sleep(retry_time)
+            retry_count += 1
 
-    story = response.choices[0].text.strip()
-    return {"character": character_name, "story": story}
+            if retry_count >= max_retries:
+                raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="OpenAI rate limit reached.")
 
 if __name__ == "__main__":
     import uvicorn
