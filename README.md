@@ -81,7 +81,7 @@ Open Your Browser: Go to `http://127.0.0.1:8000/docs` to access the automaticall
 #### Step 8: Test Your Endpoints
 Create a Character:
 
-Send a POST request to `http://127.0.0.1:8000/api/create_character` with a JSON body like:
+Send a POST request to `http://127.0.0.1:8000/api/characters` with a JSON body like:
 
 {
   "name": "Bilbo Baggins",
@@ -91,7 +91,7 @@ Send a POST request to `http://127.0.0.1:8000/api/create_character` with a JSON 
 
 Generate a Story:
 
-Send a POST request to `http://127.0.0.1:8000/api/generate_story` with a JSON body like:
+Send a POST request to `http://127.0.0.1:8000/api/stories/generate_story` with a JSON body like:
 
 {
   "character_name": "Bilbo Baggins"
