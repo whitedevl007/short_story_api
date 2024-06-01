@@ -27,15 +27,12 @@ class GenerateStoryRequest(BaseModel):
     character_name: Optional[str] = None
     character_id: Optional[int] = None
 
-@backoff.on_exception(backoff.expo, RateLimitError, max_time=120, base=2)
+@backoff.on_exception(backoff.expo, RateLimitError, max_time=60, base=2)
 def generate_story_with_backoff(prompt: str):
-    response = openai.ChatCompletion.create(
+    response = openai.Completion.create(
         model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=20,
+        prompt=prompt,
+        max_tokens=100,
     )
     return response
 
@@ -69,7 +66,7 @@ def generate_story(request: GenerateStoryRequest):
     # Generate the story using OpenAI's API with backoff for rate limit errors
     try:
         response = generate_story_with_backoff(prompt)
-        story = response.choices[0].message['content'].strip()
+        story = response.choices[0].text.strip()
         return {"character": character_name, "story": story}
 
     except RateLimitError as e:

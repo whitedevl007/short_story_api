@@ -88,8 +88,24 @@ Send a POST request to `http://127.0.0.1:8000/api/characters` with a JSON body l
   "details": "Hobbit lives in the Shire owning a magic ring"
 }
 
+###### Curl Command:
 
-Generate a Story:
+curl -X POST "http://127.0.0.1:8000/api/characters" -H "Content-Type: application/json" -d '{
+  "name": "Bilbo Baggins",
+  "details": "Hobbit lives in the Shire owning a magic ring"
+}'
+
+
+###### Expected Response:
+
+{
+  "id": 1,
+  "name": "Bilbo Baggins",
+  "details": "Hobbit lives in the Shire owning a magic ring"
+}
+
+
+###### Generate a Story:
 
 Send a POST request to `http://127.0.0.1:8000/api/stories/generate_story` with a JSON body like:
 
@@ -101,6 +117,27 @@ or
 
 {
   "character_id": 1
+}
+
+###### Curl Command with Character Name:
+
+curl -X POST "http://127.0.0.1:8000/api/stories/generate_story" -H "Content-Type: application/json" -d '{
+  "character_name": "Bilbo Baggins"
+}'
+
+
+###### Curl Command with Character ID:
+
+curl -X POST "http://127.0.0.1:8000/api/stories/generate_story" -H "Content-Type: application/json" -d '{
+  "character_id": 1
+}'
+
+
+###### Expected Response:
+
+{
+  "character": "Bilbo Baggins",
+  "story": "Bilbo Baggins, a cheerful Hobbit lives in the Shire owning a magic ring, lived a quiet life. Unbeknownst to many, he owned a mysterious magic ring, which he stumbled upon during one of his adventures. This ring granted him the ability to become invisible, a secret he kept close to his heart. Though content with his simple life, he often daydreamed about the adventures the ring could lead him to. Little did he know, destiny had grand plans for him and his magical possession."
 }
 
 
